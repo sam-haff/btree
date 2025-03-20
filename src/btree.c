@@ -1,5 +1,7 @@
 #include "btree.h"
+#include <assert.h>
 
+// insert child at the requested index
 void insertChild(struct Node* tgt, struct Node* c, int ix) {
     if (ix == tgt->childsNum) {
         tgt->childs[ix] = c;
@@ -16,11 +18,11 @@ void insertChild(struct Node* tgt, struct Node* c, int ix) {
     tgt->childs[ix] = c;
     tgt->childsNum++;
 }
-
+// insert child at the end
 void insertChildSeq(struct Node* tgt, struct Node* c) {
     insertChild(tgt, c, tgt->childsNum);
 }
-
+// insert key maintaining sorted order
 int insertKey(struct Node* tgt, int key) {
     int i = tgt->keysNum-1;
     while (i>=0 && tgt->keys[i] > key){
@@ -33,12 +35,13 @@ int insertKey(struct Node* tgt, int key) {
     
     return i;
 }
+// insert key at the end of the array
 int insertKeySeq(struct Node* tgt, int key) {
     tgt->keys[tgt->keysNum] = key;
     tgt->keysNum++;
     return tgt->keysNum-1;
 }
-;
+
 
 struct Node* Node_new(){
     struct Node* nd = (struct Node*)malloc(sizeof(struct Node));
@@ -111,12 +114,14 @@ void splitNode(struct BTree* tree, struct Node* parent, int child) {
     }
 
 void insert(struct BTree* tree, int key) {
+    // traverse state
     struct Node* curr = tree->_root;
     int currIxTr[12];
     int currIxPos = 0;
     currIxTr[0] = 0;
     struct Node* parentTr[12];
     parentTr[0] = (struct Node*)0;
+
     while (1) {
         int currIx = currIxTr[currIxPos];
         struct Node* parent = parentTr[currIxPos];
@@ -140,7 +145,7 @@ void insert(struct BTree* tree, int key) {
                 currIxPos--;
             else {
                 currIxTr[0] = 0;
-                parentTr[0] = (struct Node*)0; //ptr
+                parentTr[0] = (struct Node*)0; 
             }
             continue;
         }

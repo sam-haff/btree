@@ -1,7 +1,6 @@
 #ifndef __UTIL_H__
 #define __UTIL_H__
 
-#include <assert.h>
 #include <stdlib.h>
 
 struct Node{
