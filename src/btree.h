@@ -33,6 +33,7 @@ void _visitInOrder(struct BTree* tree, struct Node* nd, void (*f)(int));
 void visitInOrder(struct BTree* tree, void (*f)(int));
 void splitNode(struct BTree* tree, struct Node* parent, int child); 
 void insert(struct BTree* tree, int key);
+int search(struct BTree* tree, int key); // same as "contains" for now, 1 if tree has key, 0 if not
 
 
 #endif

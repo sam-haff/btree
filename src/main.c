@@ -7,19 +7,11 @@ void visitF(int key){
 
 int main() {
     struct BTree tree = BTree_init(2);
-    insert(&tree, 1);
-    insert(&tree, 2);
-    insert(&tree, 3);
-    insert(&tree, 6);
-    insert(&tree, 4);
-    insert(&tree, 5);
-    insert(&tree, 11);
-    insert(&tree, -10);
-    insert(&tree, 50); 
 
-    insert(&tree, 0);
-    insert(&tree, -1);
-    insert(&tree, 2); 
+    int keys[10] = {1 ,6, 2, 0, -40, 2, 24, 12, 1, 7};
+    for (int i =0; i < 10; i++) {
+        insert(&tree, keys[i]);
+    }
     visitInOrder(&tree, visitF);
 
     return 0;

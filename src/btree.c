@@ -63,6 +63,8 @@ struct Node* allocNode(struct BTree* t) {
 }
 
 struct BTree BTree_init(int k) {
+    assert(k >= 2);
+
     struct BTree tree;
     tree._k = k;
     tree._maxChildsNum = 2*k;
@@ -112,7 +114,23 @@ void splitNode(struct BTree* tree, struct Node* parent, int child) {
         ch->childsNum = tree->_k;
         ch->keysNum = tree->_k - 1;
     }
+int search(struct BTree* tree, int key) {
+    struct Node* curr = tree->_root;
 
+    while (!curr->isLeaf) {
+        int i = curr->keysNum - 1; 
+        while (i >= 0 && curr->keys[i] > key) i--;
+        if (i >= 0 && curr->keys[i] == key) { return 1; }
+        i++;
+        
+        curr = curr->childs[i];
+    }
+    for (int i = 0; i < curr->keysNum; i++) {
+        if (curr->keys[i] == key)
+            return 1;
+    }
+    return 0;
+}
 void insert(struct BTree* tree, int key) {
     // traverse state
     struct Node* curr = tree->_root;
