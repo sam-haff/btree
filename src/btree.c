@@ -190,6 +190,121 @@ void insert(struct BTree* tree, int key) {
         parentTr[currIxPos] = parent;
         currIxTr[currIxPos] = currIx;
     }
+}
 
+void removeChild(struct Node* tgt, int ix){
+    assert(tgt->childsNum > 0);
+
+    for (int i = ix; i < tgt->childsNum-1; i++) {
+        tgt->childs[i] = tgt->childs[i+1];
+    }
+    tgt->childsNum--;
+}
+void removeKey(struct Node* tgt, int ix){
+    assert(tgt->keysNum > 0);
+
+    for (int i = ix; i < tgt->keysNum-1; i++) {
+        tgt->keys[i] = tgt->keys[i+1];
+    }
+    tgt->keysNum--;
+}
+
+void delete(struct BTree* tree, struct Node* rt, int key) {
+    //SCARY
+
+    struct Node* curr = rt;
+
+    while (!curr->isLeaf) {
+        int i = curr->keysNum - 1; 
+        while (i >= 0 && curr->keys[i] > key) i--;
+        if (i >= 0 && curr->keys[i] == key) {
+            if (curr->childs[i]->keysNum >= tree->_k) {
+                int _key = curr->childs[i]->keys[curr->childs[i]->keysNum-1];
+                
+                curr->keys[i] = _key;
+                curr = curr->childs[i];
+                key = _key;
+                continue; 
+            } else
+            if (curr->childs[i+1]->keysNum >= tree->_k) {
+                int _key = curr->childs[i+1]->keys[0];
+                
+                curr->keys[i] = _key;
+                curr = curr->childs[i+1];
+                key = _key;
+                continue; 
+
+            } else {
+                //merge childs i i+1
+                // remove k in curr
+                // merge childs(no key seperator now)
+                removeKey(curr, i);
+                for (int j = 0; j < curr->childs[i+1]->childsNum; j++) {
+                    insertChildSeq(curr->childs[i], curr->childs[i+1]->childs[j]);
+                }
+                insertKeySeq(curr->childs[i], key);
+                for (int j = 0; j < curr->childs[i+1]->keysNum; j++) {
+                    insertKeySeq(curr->childs[i], curr->childs[i+1]->keys[j]);
+                }
+                removeChild(curr, i+1);
+
+                curr = curr->childs[i];
+
+                continue;
+            }
+            return; 
+        }
+        i++;
+
+        if (curr->childs[i]->keysNum == tree->_k - 1) {
+            // do the procedure
+            if (i > 0 && curr->childs[i-1]->keysNum == tree->_k) {
+                // descend key from curr to child i
+                int keyToDesc = curr->keys[i-1];
+                insertKey(curr->childs[i], curr->keys[i-1]); // also need to remove it from curr
+                curr->keys[i-1] = curr->childs[i - 1]->keys[curr->keysNum-1];
+            } else
+            if (i < curr->childsNum-1 && curr->childs[i+1]->keysNum == tree->_k) {
+                int keyToDesc = curr->keys[i]; 
+                insertKey(curr->childs[i], curr->keys[i]); // also need to remove it from curr
+                curr->keys[i] = curr->childs[i + 1]->keys[0];
+            }
+            else {
+                // b procedure
+                if (i > 0) {
+                    struct Node* left = curr->childs[i-1];
+                    insertKey(left, curr->keys[i-1]);
+                    for (int j = 0; j< curr->childs[i]->keysNum; j++) {
+                        insertKeySeq(left, curr->childs[i]->keys[j]);
+                    }
+                    for (int j = 0; j < curr->childs[i]->childsNum; j++) {
+                        insertChildSeq(curr->childs[i-1], curr->childs[i]->childs[j]);
+                    }
+                    removeChild(curr, i); // TODO: TO DEALLOC?
+                    i = i - 1;
+                } else {
+                    // merge with next sibling
+                    struct Node* right = curr->childs[i+1];
+                    insertKey(right, curr->keys[i]);
+                    for (int j = 0; j< right->keysNum; j++) {
+                        insertKeySeq(curr->childs[i], right->keys[j]);
+                    }
+                    for (int j = 0; j < right->childsNum; j++) {
+                        insertChildSeq(curr->childs[i], right->childs[j]);
+                    }
+                    removeChild(curr, i+1); // TODO: TO DEALLOC?
+                }
+            }
+        }
+        curr = curr->childs[i];
+    }
+
+    for (int i = 0; i < curr->keysNum; i++){
+        if (curr->keys[i] == key) {
+            removeKey(curr, i);
+            return;
+        }
+    }
+    // on leaf -> simply delete the key
 }
 

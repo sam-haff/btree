@@ -20,6 +20,7 @@ struct BTree{
 };
 
 // Node "methods"
+void removeChild(struct Node* tgt, int ix);
 void insertChild(struct Node* tgt, struct Node* c, int ix);
 void insertChildSeq(struct Node* tgt, struct Node* c);
 int insertKey(struct Node* tgt, int key);
@@ -33,6 +34,7 @@ void _visitInOrder(struct BTree* tree, struct Node* nd, void (*f)(int));
 void visitInOrder(struct BTree* tree, void (*f)(int));
 void splitNode(struct BTree* tree, struct Node* parent, int child); 
 void insert(struct BTree* tree, int key);
+void delete(struct BTree* tree, struct Node* rt, int key);
 int search(struct BTree* tree, int key); // same as "contains" for now, 1 if tree has key, 0 if not
 
 

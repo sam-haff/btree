@@ -12,6 +12,10 @@ int main() {
     for (int i =0; i < 10; i++) {
         insert(&tree, keys[i]);
     }
+    //visitInOrder(&tree, visitF);
+
+    delete(&tree, tree._root, 6);
+
     visitInOrder(&tree, visitF);
 
     return 0;
