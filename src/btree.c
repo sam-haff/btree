@@ -258,40 +258,58 @@ void delete(struct BTree* tree, struct Node* rt, int key) {
 
         if (curr->childs[i]->keysNum == tree->_k - 1) {
             // do the procedure
-            if (i > 0 && curr->childs[i-1]->keysNum == tree->_k) {
+            if (i > 0 && curr->childs[i-1]->keysNum >= tree->_k) {
                 // descend key from curr to child i
                 int keyToDesc = curr->keys[i-1];
-                insertKey(curr->childs[i], curr->keys[i-1]); // also need to remove it from curr
+
                 curr->keys[i-1] = curr->childs[i - 1]->keys[curr->keysNum-1];
+                insertKey(curr->childs[i], keyToDesc); // also need to remove it from curr
+
+                removeKey(curr->childs[i-1], curr->keysNum-1); // ??? // what to do whith childs????
+
+                struct Node* opChild = curr->childs[i-1];
+                struct Node* childToMove = opChild->childs[opChild->childsNum-1];
+                removeChild(opChild, opChild->childsNum - 1);
+                insertChild(curr->childs[i], childToMove, 0); // AAAAAAAAAAAAAAAAAAAAAAAAAAAA
             } else
-            if (i < curr->childsNum-1 && curr->childs[i+1]->keysNum == tree->_k) {
+            if (i < curr->childsNum-1 && curr->childs[i+1]->keysNum >= tree->_k) {
                 int keyToDesc = curr->keys[i]; 
-                insertKey(curr->childs[i], curr->keys[i]); // also need to remove it from curr
+
                 curr->keys[i] = curr->childs[i + 1]->keys[0];
+                insertKey(curr->childs[i], keyToDesc); // also need to remove it from curr
+
+                removeKey(curr->childs[i+1], 0); // ???
+
+                struct Node* opChild = curr->childs[i+1];
+                struct Node* childToMove = opChild->childs[0];
+                removeChild(opChild, 0);
+                insertChildSeq(curr->childs[i], childToMove); // AAAAAAAAAAAAAAAAAAAAAAAAAAAA
             }
             else {
                 // b procedure
                 if (i > 0) {
                     struct Node* left = curr->childs[i-1];
-                    insertKey(left, curr->keys[i-1]);
+                    insertKey(left, curr->keys[i-1]); // remove curr->keys[i]?? // WHAT IS KEY INDEX???????
                     for (int j = 0; j< curr->childs[i]->keysNum; j++) {
                         insertKeySeq(left, curr->childs[i]->keys[j]);
                     }
                     for (int j = 0; j < curr->childs[i]->childsNum; j++) {
                         insertChildSeq(curr->childs[i-1], curr->childs[i]->childs[j]);
                     }
+                    removeKey(curr, i-1);
                     removeChild(curr, i); // TODO: TO DEALLOC?
                     i = i - 1;
-                } else {
+                } else { // check the conditions!!!!!!!
                     // merge with next sibling
                     struct Node* right = curr->childs[i+1];
-                    insertKey(right, curr->keys[i]);
+                    insertKey(curr->childs[i], curr->keys[i]); // ???
                     for (int j = 0; j< right->keysNum; j++) {
                         insertKeySeq(curr->childs[i], right->keys[j]);
                     }
                     for (int j = 0; j < right->childsNum; j++) {
                         insertChildSeq(curr->childs[i], right->childs[j]);
                     }
+                    removeKey(curr, i);
                     removeChild(curr, i+1); // TODO: TO DEALLOC?
                 }
             }
@@ -299,12 +317,12 @@ void delete(struct BTree* tree, struct Node* rt, int key) {
         curr = curr->childs[i];
     }
 
+    // on leaf -> simply delete the key
     for (int i = 0; i < curr->keysNum; i++){
         if (curr->keys[i] == key) {
             removeKey(curr, i);
             return;
         }
     }
-    // on leaf -> simply delete the key
 }
 
