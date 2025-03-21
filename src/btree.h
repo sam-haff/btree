@@ -2,6 +2,7 @@
 #define __UTIL_H__
 
 #include <stdlib.h>
+#include <stdbool.h>
 
 struct Node{
     struct Node** childs; // dynamic array, to dealloc
@@ -13,7 +14,8 @@ struct Node{
 };
 
 struct BTree{
-    int _k;
+    int _elsNum;
+    int _k; // t
     int _maxChildsNum;
     int _maxKeysNum;
     struct Node* _root;
@@ -36,6 +38,7 @@ void splitNode(struct BTree* tree, struct Node* parent, int child);
 void insert(struct BTree* tree, int key);
 void delete(struct BTree* tree, struct Node* rt, int key);
 int search(struct BTree* tree, int key); // same as "contains" for now, 1 if tree has key, 0 if not
+void freeTree(struct BTree* tree, bool freeRoot);
 
 
 #endif

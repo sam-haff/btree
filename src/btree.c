@@ -1,4 +1,5 @@
 #include "btree.h"
+#include <stdbool.h>
 #include <assert.h>
 
 // insert child at the requested index
@@ -65,6 +66,48 @@ void freeNode(struct Node* nd){
     free(nd->childs);
     free(nd->keys);
     free(nd);
+}
+void removeChildPtr(struct Node* tgt, struct Node* nd) {
+    for (int i = 0; i < tgt->childsNum; i++) {
+        if (tgt->childs[i]==nd) {
+            removeChild(tgt, i);
+            return;
+        }
+    }
+}
+void freeTree(struct BTree* tree, bool freeRoot) {
+    // dfs
+    int estimatedMaxNodes = tree->_elsNum/(tree->_k-1);
+    struct Node** st = malloc(estimatedMaxNodes * sizeof(struct Node*));
+    int stPtr = 0;
+
+    st[stPtr++] = tree->_root;
+    while (stPtr != 0) {
+        struct Node* parent = stPtr > 1 ? st[stPtr-2] : NULL ;
+        struct Node* curr = st[stPtr-1];
+        if (curr->childsNum == 0 || curr->isLeaf) {
+            if (stPtr > 1) {
+                removeChildPtr(parent, curr);
+                freeNode(curr);
+            }
+            if (stPtr == 1) {
+                while (curr->keysNum) {
+                    removeKey(curr, 0);
+                }
+            }
+            stPtr--;
+            continue;
+        }
+        st[stPtr] = st[stPtr-1]->childs[0];
+        stPtr++;
+    }
+
+    tree->_elsNum = 0;
+
+    if (freeRoot) {
+        freeNode(tree->_root);
+        tree->_root = NULL;
+    }
 }
 
 struct BTree BTree_init(int k) {
@@ -137,6 +180,8 @@ int search(struct BTree* tree, int key) {
     return 0;
 }
 void insert(struct BTree* tree, int key) {
+    tree->_elsNum++;
+
     // traverse state
     struct Node* curr = tree->_root;
     int currIxTr[12];
@@ -215,6 +260,8 @@ void removeKey(struct Node* tgt, int ix){
 }
 
 void delete(struct BTree* tree, struct Node* rt, int key) {
+    tree->_elsNum--;
+
     struct Node* curr = rt;
 
     while (!curr->isLeaf) {
