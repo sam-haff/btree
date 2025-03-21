@@ -18,10 +18,17 @@ int main() {
         insert(&tree, i);
     }
 
-    for (int i = 9; i>2; i--) {
+    for (int i = 9; i > 4; i--) {
         delete(&tree, tree._root, i);
+        if (tree._root->childsNum == 1 && tree._root->keysNum == 0) {
+            tree._root = tree._root->childs[0];
+        }
     }
 
+    printf("----Checkpoint :(");
+    delete(&tree, tree._root, 4);
+
+    printf("----Checkpoint");
     visitInOrder(&tree, visitF);
 
     printf("----");

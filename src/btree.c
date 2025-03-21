@@ -262,15 +262,17 @@ void delete(struct BTree* tree, struct Node* rt, int key) {
                 // descend key from curr to child i
                 int keyToDesc = curr->keys[i-1];
 
-                curr->keys[i-1] = curr->childs[i - 1]->keys[curr->keysNum-1];
+                curr->keys[i-1] = curr->childs[i - 1]->keys[curr->childs[i-1]->keysNum-1];
                 insertKey(curr->childs[i], keyToDesc); // also need to remove it from curr
 
-                removeKey(curr->childs[i-1], curr->keysNum-1); // ??? // what to do whith childs????
+                removeKey(curr->childs[i-1], curr->childs[i-1]->keysNum-1); // ??? // what to do whith childs????
 
                 struct Node* opChild = curr->childs[i-1];
-                struct Node* childToMove = opChild->childs[opChild->childsNum-1];
-                removeChild(opChild, opChild->childsNum - 1);
-                insertChild(curr->childs[i], childToMove, 0); // AAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                if (!opChild->isLeaf) {
+                    struct Node* childToMove = opChild->childs[opChild->childsNum-1];
+                    removeChild(opChild, opChild->childsNum - 1);
+                    insertChild(curr->childs[i], childToMove, 0); // AAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                }
             } else
             if (i < curr->childsNum-1 && curr->childs[i+1]->keysNum >= tree->_k) {
                 int keyToDesc = curr->keys[i]; 
@@ -281,9 +283,11 @@ void delete(struct BTree* tree, struct Node* rt, int key) {
                 removeKey(curr->childs[i+1], 0); // ???
 
                 struct Node* opChild = curr->childs[i+1];
-                struct Node* childToMove = opChild->childs[0];
-                removeChild(opChild, 0);
-                insertChildSeq(curr->childs[i], childToMove); // AAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                if (!opChild->isLeaf) {
+                    struct Node* childToMove = opChild->childs[0];
+                    removeChild(opChild, 0);
+                    insertChildSeq(curr->childs[i], childToMove); // AAAAAAAAAAAAAAAAAAAAAAAAAAAA // WHAT TO DO IN CASE childs[i] is leaf???
+                }
             }
             else {
                 // b procedure
@@ -293,9 +297,10 @@ void delete(struct BTree* tree, struct Node* rt, int key) {
                     for (int j = 0; j< curr->childs[i]->keysNum; j++) {
                         insertKeySeq(left, curr->childs[i]->keys[j]);
                     }
-                    for (int j = 0; j < curr->childs[i]->childsNum; j++) {
-                        insertChildSeq(curr->childs[i-1], curr->childs[i]->childs[j]);
-                    }
+                    if (!curr->childs[i-1]->isLeaf)
+                        for (int j = 0; j < curr->childs[i]->childsNum; j++) {
+                            insertChildSeq(curr->childs[i-1], curr->childs[i]->childs[j]);
+                        }
                     removeKey(curr, i-1);
                     removeChild(curr, i); // TODO: TO DEALLOC?
                     i = i - 1;
@@ -306,9 +311,10 @@ void delete(struct BTree* tree, struct Node* rt, int key) {
                     for (int j = 0; j< right->keysNum; j++) {
                         insertKeySeq(curr->childs[i], right->keys[j]);
                     }
-                    for (int j = 0; j < right->childsNum; j++) {
-                        insertChildSeq(curr->childs[i], right->childs[j]);
-                    }
+                    if (!curr->childs[i]->isLeaf)
+                        for (int j = 0; j < right->childsNum; j++) {
+                            insertChildSeq(curr->childs[i], right->childs[j]);
+                        }
                     removeKey(curr, i);
                     removeChild(curr, i+1); // TODO: TO DEALLOC?
                 }
