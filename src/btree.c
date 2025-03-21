@@ -75,21 +75,21 @@ struct BTree BTree_init(int k) {
 
     return tree;
 }
-void _visitInOrder(struct BTree* tree, struct Node* nd, void (*f)(int)) {
+void _visitInOrder(struct BTree* tree, struct Node* nd, void (*f)(int, void*), void* extra) {
     if (!nd->isLeaf) {
         for (int i = 0; i < nd->childsNum; i++) {
-            _visitInOrder(tree, nd->childs[i], f);
+            _visitInOrder(tree, nd->childs[i], f, extra);
             if (i != nd->childsNum - 1)
-                f(nd->keys[i]);
+                f(nd->keys[i], extra);
         }
     }
     else {
         for (int i = 0; i < nd->keysNum; i++)
-            f(nd->keys[i]);
+            f(nd->keys[i], extra);
     }
 }
-void visitInOrder(struct BTree* tree, void (*f)(int)) {
-    _visitInOrder(tree, tree->_root, f);
+void visitInOrder(struct BTree* tree, void (*f)(int, void*), void* extra) {
+    _visitInOrder(tree, tree->_root, f, extra);
 }
 
 void splitNode(struct BTree* tree, struct Node* parent, int child) {
@@ -327,8 +327,14 @@ void delete(struct BTree* tree, struct Node* rt, int key) {
     for (int i = 0; i < curr->keysNum; i++){
         if (curr->keys[i] == key) {
             removeKey(curr, i);
-            return;
+            break;
+            //return;
         }
+    }
+
+    // compactify root if needed
+    if (tree->_root->childsNum == 1 && tree->_root->keysNum == 0) {
+        tree->_root = tree->_root->childs[0];
     }
 }
 

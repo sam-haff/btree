@@ -30,8 +30,8 @@ struct Node* allocNode(struct BTree* t);
 
 // BTree "methods"
 struct BTree BTree_init(int k);
-void _visitInOrder(struct BTree* tree, struct Node* nd, void (*f)(int));
-void visitInOrder(struct BTree* tree, void (*f)(int));
+void _visitInOrder(struct BTree* tree, struct Node* nd, void (*f)(int, void*), void*);
+void visitInOrder(struct BTree* tree, void (*f)(int, void*), void*);
 void splitNode(struct BTree* tree, struct Node* parent, int child); 
 void insert(struct BTree* tree, int key);
 void delete(struct BTree* tree, struct Node* rt, int key);
