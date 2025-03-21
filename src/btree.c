@@ -61,6 +61,11 @@ struct Node* allocNode(struct BTree* t) {
 
     return nd;
 }
+void freeNode(struct Node* nd){
+    free(nd->childs);
+    free(nd->keys);
+    free(nd);
+}
 
 struct BTree BTree_init(int k) {
     assert(k >= 2);
@@ -210,15 +215,22 @@ void removeKey(struct Node* tgt, int ix){
 }
 
 void delete(struct BTree* tree, struct Node* rt, int key) {
-    //SCARY
-
     struct Node* curr = rt;
 
     while (!curr->isLeaf) {
         int i = curr->keysNum - 1; 
         while (i >= 0 && curr->keys[i] > key) i--;
         if (i >= 0 && curr->keys[i] == key) {
+            // we cant simply delete k from keys in the node because we then will need to do smth with extra child.
+            // so instead we are doing the following procedure.
+
             if (curr->childs[i]->keysNum >= tree->_k) {
+               
+                // keys[i] is k.
+                // ascend last key from left child to keys[i].
+                // now there no target key k in the tree.
+                // but we have duplicate key in ch[i] so we need to now delete it.
+                // => change target key to that duplicate key and recurse.
                 int _key = curr->childs[i]->keys[curr->childs[i]->keysNum-1];
                 
                 curr->keys[i] = _key;
@@ -227,6 +239,7 @@ void delete(struct BTree* tree, struct Node* rt, int key) {
                 continue; 
             } else
             if (curr->childs[i+1]->keysNum >= tree->_k) {
+                // same as prev symmetrically for right child.
                 int _key = curr->childs[i+1]->keys[0];
                 
                 curr->keys[i] = _key;
@@ -235,9 +248,11 @@ void delete(struct BTree* tree, struct Node* rt, int key) {
                 continue; 
 
             } else {
-                //merge childs i i+1
-                // remove k in curr
-                // merge childs(no key seperator now)
+                // remove k in curr.
+                // merge keys as ch[i].keys[0],...,ch[i].keys[last], k, ch[i+1].keys[0],...,ch[i+1].keys[last] in ch[i].
+                // merge childs as ch[i].ch[0],...,ch[i].ch[last], ch[i+1].ch[0], ..., ch[i+1].ch[last] in ch[i].
+                // remove ch[i+1].
+                // recurse to ch[i+1].
                 removeKey(curr, i);
                 for (int j = 0; j < curr->childs[i+1]->childsNum; j++) {
                     insertChildSeq(curr->childs[i], curr->childs[i+1]->childs[j]);
@@ -246,7 +261,9 @@ void delete(struct BTree* tree, struct Node* rt, int key) {
                 for (int j = 0; j < curr->childs[i+1]->keysNum; j++) {
                     insertKeySeq(curr->childs[i], curr->childs[i+1]->keys[j]);
                 }
+                struct Node* nd = curr->childs[i+1];
                 removeChild(curr, i+1);
+                freeNode(nd); // node is merged and no longer referenced
 
                 curr = curr->childs[i];
 
@@ -254,46 +271,71 @@ void delete(struct BTree* tree, struct Node* rt, int key) {
             }
             return; 
         }
-        i++;
+        i++; // now this is the index of the child that potentially contains target key 
 
+        // remember the property of BTree - all inner nodes should contain at least t-1 keys.
+        // that means we can't do deletion op on the node that already has t-1 keys.
+        // so before descending to a node, we need to ensure it has at least t keys(if we delete from it, 
+        // then we at least still have valid node).
         if (curr->childs[i]->keysNum == tree->_k - 1) {
-            // do the procedure
+            // keys number is not sufficient, need to cover that gap
             if (i > 0 && curr->childs[i-1]->keysNum >= tree->_k) {
+                // left child(lch) is ch[i-1], right(rch) is ch[i].
+                // left key is keys[i-1].
+                // lch, keys[i-1], rch
+
+                // take left key, and save it.
+                // ascend rightmost key from left child to the left key(replace it).
+                // descend saved old left key to right child(we be a new rch->keys[0]).
+                // remove rightmost key from left child.
+
                 // descend key from curr to child i
                 int keyToDesc = curr->keys[i-1];
 
                 curr->keys[i-1] = curr->childs[i - 1]->keys[curr->childs[i-1]->keysNum-1];
-                insertKey(curr->childs[i], keyToDesc); // also need to remove it from curr
+                insertKey(curr->childs[i], keyToDesc); 
 
-                removeKey(curr->childs[i-1], curr->childs[i-1]->keysNum-1); // ??? // what to do whith childs????
+                removeKey(curr->childs[i-1], curr->childs[i-1]->keysNum-1); 
 
                 struct Node* opChild = curr->childs[i-1];
                 if (!opChild->isLeaf) {
                     struct Node* childToMove = opChild->childs[opChild->childsNum-1];
                     removeChild(opChild, opChild->childsNum - 1);
-                    insertChild(curr->childs[i], childToMove, 0); // AAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                    insertChild(curr->childs[i], childToMove, 0); 
                 }
             } else
             if (i < curr->childsNum-1 && curr->childs[i+1]->keysNum >= tree->_k) {
+                // same as prev, symetrically for right key.
                 int keyToDesc = curr->keys[i]; 
 
                 curr->keys[i] = curr->childs[i + 1]->keys[0];
-                insertKey(curr->childs[i], keyToDesc); // also need to remove it from curr
+                insertKey(curr->childs[i], keyToDesc); 
 
-                removeKey(curr->childs[i+1], 0); // ???
+                removeKey(curr->childs[i+1], 0); 
 
                 struct Node* opChild = curr->childs[i+1];
                 if (!opChild->isLeaf) {
                     struct Node* childToMove = opChild->childs[0];
                     removeChild(opChild, 0);
-                    insertChildSeq(curr->childs[i], childToMove); // AAAAAAAAAAAAAAAAAAAAAAAAAAAA // WHAT TO DO IN CASE childs[i] is leaf???
+                    insertChildSeq(curr->childs[i], childToMove); 
                 }
             }
             else {
-                // b procedure
+                // both siblings have not enough keys to make a donation to our descend candidate node.
+                // => merge arbitrary sibling to our candidate.
+
                 if (i > 0) {
+                    // merge our candate(ch[i]) to left sibling(ch[i-1]).
+                    // take left sibling(ch[i-1]).
+                    // save left key(keys[i-1]), call it lkey.
+                    // merge left sibling keys with candidate as 
+                    // ch[i-1].keys[0]...ch[i-1].keys[last], lkey, ch[i].keys[0],...,ch[i].keys[last].
+                    // merge left sibling childs with candidate as
+                    // ch[i-1].ch[0],..., ch[i-1].ch[last], ch[i].ch[0],...,ch[i].ch[last].
+                    // remove our candidate as it is merged into left siblint and is no longer useful.
+                    // make left sibling our new candidate.
                     struct Node* left = curr->childs[i-1];
-                    insertKey(left, curr->keys[i-1]); // remove curr->keys[i]?? // WHAT IS KEY INDEX???????
+                    insertKey(left, curr->keys[i-1]); 
                     for (int j = 0; j< curr->childs[i]->keysNum; j++) {
                         insertKeySeq(left, curr->childs[i]->keys[j]);
                     }
@@ -302,12 +344,14 @@ void delete(struct BTree* tree, struct Node* rt, int key) {
                             insertChildSeq(curr->childs[i-1], curr->childs[i]->childs[j]);
                         }
                     removeKey(curr, i-1);
-                    removeChild(curr, i); // TODO: TO DEALLOC?
+                    struct Node* nd = curr->childs[i];
+                    removeChild(curr, i); 
+                    freeNode(nd); // node is merged and no longer referenced
                     i = i - 1;
-                } else { // check the conditions!!!!!!!
-                    // merge with next sibling
+                } else { 
+                    // same as prev, symetrically for right sibling.
                     struct Node* right = curr->childs[i+1];
-                    insertKey(curr->childs[i], curr->keys[i]); // ???
+                    insertKey(curr->childs[i], curr->keys[i]); 
                     for (int j = 0; j< right->keysNum; j++) {
                         insertKeySeq(curr->childs[i], right->keys[j]);
                     }
@@ -316,7 +360,8 @@ void delete(struct BTree* tree, struct Node* rt, int key) {
                             insertChildSeq(curr->childs[i], right->childs[j]);
                         }
                     removeKey(curr, i);
-                    removeChild(curr, i+1); // TODO: TO DEALLOC?
+                    removeChild(curr, i+1); 
+                    freeNode(right); // node is merged and out of the tree
                 }
             }
         }
@@ -328,13 +373,14 @@ void delete(struct BTree* tree, struct Node* rt, int key) {
         if (curr->keys[i] == key) {
             removeKey(curr, i);
             break;
-            //return;
         }
     }
 
-    // compactify root if needed
+    // shrink if needed
     if (tree->_root->childsNum == 1 && tree->_root->keysNum == 0) {
+        struct Node* nd = tree->_root;
         tree->_root = tree->_root->childs[0];
+        free(nd);
     }
 }
 
