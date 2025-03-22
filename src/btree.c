@@ -43,6 +43,22 @@ int insertKeySeq(struct Node* tgt, int key) {
     return tgt->keysNum-1;
 }
 
+void removeChild(struct Node* tgt, int ix){
+    assert(tgt->childsNum > 0);
+
+    for (int i = ix; i < tgt->childsNum-1; i++) {
+        tgt->childs[i] = tgt->childs[i+1];
+    }
+    tgt->childsNum--;
+}
+void removeKey(struct Node* tgt, int ix){
+    assert(tgt->keysNum > 0);
+
+    for (int i = ix; i < tgt->keysNum-1; i++) {
+        tgt->keys[i] = tgt->keys[i+1];
+    }
+    tgt->keysNum--;
+}
 
 struct Node* Node_new(){
     struct Node* nd = (struct Node*)malloc(sizeof(struct Node));
@@ -126,6 +142,9 @@ struct BTree BTree_init(int k) {
     return tree;
 }
 void _visitInOrder(struct BTree* tree, struct Node* nd, void (*f)(int, void*), void* extra) {
+    if (nd == NULL) {
+        return;
+    }
     if (!nd->isLeaf) {
         for (int i = 0; i < nd->childsNum; i++) {
             _visitInOrder(tree, nd->childs[i], f, extra);
@@ -244,22 +263,7 @@ void insert(struct BTree* tree, int key) {
     }
 }
 
-void removeChild(struct Node* tgt, int ix){
-    assert(tgt->childsNum > 0);
 
-    for (int i = ix; i < tgt->childsNum-1; i++) {
-        tgt->childs[i] = tgt->childs[i+1];
-    }
-    tgt->childsNum--;
-}
-void removeKey(struct Node* tgt, int ix){
-    assert(tgt->keysNum > 0);
-
-    for (int i = ix; i < tgt->keysNum-1; i++) {
-        tgt->keys[i] = tgt->keys[i+1];
-    }
-    tgt->keysNum--;
-}
 
 void delete(struct BTree* tree, struct Node* rt, int key) {
     tree->_elsNum--;

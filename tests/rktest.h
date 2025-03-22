@@ -1,5 +1,6 @@
 // modified version @sam-haff
-// changed to support gcc compilation on Windows
+// changed to support gcc compilation on Windows.
+// added EXPECT_PTR_EQ macro.
 
 // rktest.h - v1.0.0 - public domain authored 2023 by Rasmus Källqvist
 //
@@ -189,6 +190,9 @@ int rktest_main(int argc, const char* argv[]);
 	const rktest_test_t* const SUITE##_##teardown##_data##_##ptr = &SUITE##_teardown_data; \
 	ADD_TO_MEMORY_SECTION_END                                                              \
 	void SUITE##_teardown(void)
+
+/* Ptr checks */
+#define EXPECT_PTR_EQ(lhs, rhs) RKTEST_CHECK_EQ(void*, "%p", lhs, rhs, RKTEST_CHECK_EXPECT, " ")
 
 /* Bool checks */
 #define EXPECT_TRUE(expr) RKTEST_CHECK_BOOL(expr, true, RKTEST_CHECK_EXPECT, " ")
