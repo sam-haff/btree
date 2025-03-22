@@ -108,6 +108,7 @@ void freeTree(struct BTree* tree, bool freeRoot) {
         freeNode(tree->_root);
         tree->_root = NULL;
     }
+    free(st);
 }
 
 struct BTree BTree_init(int k) {
