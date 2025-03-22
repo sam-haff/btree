@@ -4,6 +4,8 @@ A simple <em>B-Tree</em> implementation in C based on the description from <em>I
 Tree is defined by a tree degree <em>t</em>, which serves balancing purposes.
 A minimum degree value is 2.
 
+<img alt="B-Tree picture, source: https://cis.stvincent.edu/html/tutorials/swd/btree/btree.html)" src="https://github.com/user-attachments/assets/1a48727a-6cfd-40b5-8403-cb61d9485ed4" width=450>
+
 Properties:
 - Node, other than root, has no less than t-1 keys.
 - Node, if not leaf, has childs number of keys number plus one.
