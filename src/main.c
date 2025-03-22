@@ -21,14 +21,15 @@ int main() {
     for (int i = 9; i >= 0; i--) {
         delete(&tree, tree._root, keys[i]);
     }
-    //freeTree(&tree);
+
     printf("----\n\n");
 
     printf("Tree elements after deletion:(should be empty)\n");
     printf("----\n");
     visitInOrder(&tree, visitF, NULL);
-
     printf("----\n");
+
+    freeTree(&tree, true);
 
     return 0;
 }

@@ -121,6 +121,7 @@ struct BTree BTree_init(int k) {
 
     tree._root = allocNode(&tree);
     tree._root->isLeaf = 1;
+    tree._elsNum = 0;
 
     return tree;
 }
